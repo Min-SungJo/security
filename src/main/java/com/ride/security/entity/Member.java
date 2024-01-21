@@ -21,6 +21,7 @@ public class Member implements UserDetails {
     private Integer id;
     private String email;
     private String name;
+    @Setter
     private String password;
     @Enumerated(EnumType.STRING)
     private Role role;
