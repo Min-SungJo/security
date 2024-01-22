@@ -1,9 +1,11 @@
 package com.ride.security.config;
 
+import com.ride.security.auditing.ApplicationAuditAware;
 import com.ride.security.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -31,6 +33,11 @@ public class ApplicationConfig {
         authenticationProvider.setUserDetailsService(userDetailsService()); // UserDetailsService 설정
         authenticationProvider.setPasswordEncoder(passwordEncoder()); // PasswordEncoder 설정
         return authenticationProvider;
+    }
+
+    @Bean
+    public AuditorAware<Integer> auditorAware() {
+        return new ApplicationAuditAware();
     }
 
     @Bean
