@@ -5,10 +5,11 @@ import com.ride.security.dto.AuthenticationRequest;
 import com.ride.security.dto.AuthenticationResponse;
 import com.ride.security.dto.RegisterRequest;
 import com.ride.security.entity.Member;
-import com.ride.security.entity.Role;
+import com.ride.security.entity.RefreshToken;
 import com.ride.security.entity.Token;
 import com.ride.security.entity.TokenType;
 import com.ride.security.repository.MemberRepository;
+import com.ride.security.repository.RefreshTokenRepository;
 import com.ride.security.repository.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+import static jakarta.servlet.http.HttpServletResponse.*;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Service
@@ -31,8 +33,9 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final TokenRepository tokenRepository;
-
+    private final TokenRepository accessTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final RedisRefreshTokenService redisRefreshTokenService;
     /**
      * 사용자 등록 및 토큰(JWT) 발급
      *
@@ -50,6 +53,9 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(member); // access 토큰 생성
         var refreshToken = jwtService.generateRefreshToken(savedMember); // refresh 토큰 생성
         saveMemberToken(savedMember, jwtToken);
+        saveMemberRefreshToken(savedMember, refreshToken);
+
+        //
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
@@ -73,6 +79,7 @@ public class AuthenticationService {
                 .orElseThrow(() -> new UsernameNotFoundException("Member not found")); // 사용자 조회
         var jwtToken = jwtService.generateToken(member); // JWT 토큰 생성
         var refreshToken = jwtService.generateRefreshToken(member);
+        saveMemberRefreshToken(member, refreshToken);
         revokeAllMemberTokens(member);
         saveMemberToken(member, jwtToken);
         return AuthenticationResponse.builder()
@@ -82,13 +89,13 @@ public class AuthenticationService {
     }
 
     private void revokeAllMemberTokens(Member member) {
-        var validMemberToken = tokenRepository.findAllValidTokensByMember(member.getId());
+        var validMemberToken = accessTokenRepository.findAllValidTokensByMember(member.getId());
         if (validMemberToken.isEmpty()) return;
         validMemberToken.forEach(t -> {
             t.setRevoked(true);
             t.setExpired(true);
         });
-        tokenRepository.saveAll(validMemberToken);
+        accessTokenRepository.saveAll(validMemberToken);
     }
 
     /**
@@ -105,29 +112,35 @@ public class AuthenticationService {
                 .expired(false)
                 .revoked(false)
                 .build();
-        tokenRepository.save(token);
+        accessTokenRepository.save(token);
     }
 
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void saveMemberRefreshToken(Member member, String refreshToken) {
+        var token = RefreshToken.builder()
+                .email(member.getEmail())
+                .token(refreshToken)
+                .build();
+        refreshTokenRepository.save(token);
+    }
+
+    public void processAccessTokenRefresh(HttpServletRequest request, HttpServletResponse response) throws IOException {
         final String authHeader = request.getHeader(AUTHORIZATION);
-        final String refreshToken;
-        final String memberEmail;
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            sendErrorResponse(response, SC_BAD_REQUEST, "Invalid Authorization header!");
             return;
         }
-        refreshToken = authHeader.substring(7);
-        memberEmail = jwtService.extractUsername(refreshToken);
+        final String refreshToken = authHeader.substring(7);
+        final String memberEmail = jwtService.extractUsername(refreshToken);
         if (memberEmail != null) {
             var member = memberRepository.findByEmail(memberEmail)
                     .orElseThrow(() -> new UsernameNotFoundException("Member not found"));
-//            var isTokenValid = tokenRepository.findByToken(refreshToken) // refreshToken 을 저장할 경우, 만료, 취소 로직을 작성하는 위치
-//                    .map(t -> !t.isExpired() && !t.isRevoked())
-//                    .orElse(false);
-//                storedToken.setExpired(true);
-//                storedToken.setRevoked(true);
-//                tokenRepository.save(storedToken);
 
-            if (jwtService.isTokenValid(refreshToken, member)) { // JWT 유효성 검증
+            if (!redisRefreshTokenService.isRefreshTokenPresent(refreshToken, member)) {
+                sendErrorResponse(response, SC_UNAUTHORIZED, "Invalid or expired refresh token!");
+                return;
+            }
+
+            if (jwtService.isTokenValid(refreshToken, member)) { // JWT 유효성 검증 성공시 토큰 재발급
                 var accessToken = jwtService.generateToken(member);
                 revokeAllMemberTokens(member);
                 saveMemberToken(member, accessToken);
@@ -135,8 +148,17 @@ public class AuthenticationService {
                         .accessToken(accessToken)
                         .refreshToken(refreshToken)
                         .build();
+                response.setStatus(SC_OK);
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+            } else {
+                sendErrorResponse(response, SC_UNAUTHORIZED, "Invalid token!");
             }
         }
+    }
+
+    private static void sendErrorResponse(HttpServletResponse response, int statusCode, String message) throws IOException {
+        response.setStatus(statusCode);
+        response.setContentType("application/json");
+        response.getWriter().write(message);
     }
 }

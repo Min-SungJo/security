@@ -37,7 +37,7 @@ public class AuthenticationController {
             HttpServletRequest request, // refresh token, Authorization Header 정보를 가져오거나 읽을 수 있음
             HttpServletResponse response // 사용자에게 응답을 다시 주입하거나 다시 보냄
     ) throws IOException {
-        authenticationService.refreshToken(request, response);
+        authenticationService.processAccessTokenRefresh(request, response);
     }
 
 }

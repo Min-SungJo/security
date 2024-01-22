@@ -3,6 +3,7 @@ package com.ride.security.entity;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Getter
 @RequiredArgsConstructor
 public enum Permission {
 
@@ -10,6 +11,7 @@ public enum Permission {
     ADMIN_UPDATE("admin:update"),
     ADMIN_CREATE("admin:create"),
     ADMIN_DELETE("admin:delete"),
+
     MANAGER_READ("manager:read"),
     MANAGER_UPDATE("manager:update"),
     MANAGER_CREATE("manager:create"),
@@ -17,6 +19,5 @@ public enum Permission {
 
     ;
 
-    @Getter
     private final String permission;
 }

@@ -92,12 +92,12 @@ public class JwtService {
      * 토큰의 username이 userDetails와 일치하고, 토큰이 만료되지 않았는지 확인
      *
      * @param token
-     * @param userDetails
+     * @param member
      * @return isTokenValid - 토큰이 유효한지 여부
      */
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public boolean isTokenValid(String token, UserDetails member) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        return (username.equals(member.getUsername())) && !isTokenExpired(token);
     }
 
     /**
