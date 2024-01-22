@@ -1,13 +1,10 @@
 package com.ride.security.config;
 
-import com.ride.security.entity.Permission;
-import com.ride.security.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,8 +15,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
-import static com.ride.security.entity.Permission.*;
-import static com.ride.security.entity.Role.*;
+import static com.ride.security.member.Permission.*;
+import static com.ride.security.member.Role.*;
 
 @Configuration
 @EnableWebSecurity // Spring Security 활성화

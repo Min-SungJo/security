@@ -1,4 +1,4 @@
-package com.ride.security.entity;
+package com.ride.security.auditing;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

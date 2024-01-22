@@ -1,12 +1,12 @@
-package com.ride.security.dto;
+package com.ride.security.auth;
 
 import lombok.*;
 
 @Getter
 @ToString
 public class AuthenticationRequest {
-    private String email;
-    private String password;
+    private final String email;
+    private final String password;
 
     @Builder
     public AuthenticationRequest(String email, String password) {

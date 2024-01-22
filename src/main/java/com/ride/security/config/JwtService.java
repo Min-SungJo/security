@@ -1,4 +1,4 @@
-package com.ride.security.service;
+package com.ride.security.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

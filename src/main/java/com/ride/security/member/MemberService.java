@@ -1,8 +1,8 @@
-package com.ride.security.service;
+package com.ride.security.member;
 
-import com.ride.security.dto.ChangePasswordRequest;
-import com.ride.security.entity.Member;
-import com.ride.security.repository.MemberRepository;
+import com.ride.security.member.ChangePasswordRequest;
+import com.ride.security.member.Member;
+import com.ride.security.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;

@@ -1,4 +1,4 @@
-package com.ride.security.dto;
+package com.ride.security.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;

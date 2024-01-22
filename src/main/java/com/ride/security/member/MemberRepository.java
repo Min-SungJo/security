@@ -1,6 +1,6 @@
-package com.ride.security.repository;
+package com.ride.security.member;
 
-import com.ride.security.entity.Member;
+import com.ride.security.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

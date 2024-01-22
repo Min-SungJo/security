@@ -1,9 +1,5 @@
-package com.ride.security.controller;
+package com.ride.security.auth;
 
-import com.ride.security.dto.AuthenticationRequest;
-import com.ride.security.dto.AuthenticationResponse;
-import com.ride.security.dto.RegisterRequest;
-import com.ride.security.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

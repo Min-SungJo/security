@@ -1,4 +1,4 @@
-package com.ride.security.dto;
+package com.ride.security.member;
 
 import lombok.Builder;
 import lombok.Getter;

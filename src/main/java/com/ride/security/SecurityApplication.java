@@ -1,8 +1,7 @@
 package com.ride.security;
 
-import com.ride.security.dto.RegisterRequest;
-import com.ride.security.entity.Role;
-import com.ride.security.service.AuthenticationService;
+import com.ride.security.auth.RegisterRequest;
+import com.ride.security.auth.AuthenticationService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,7 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.redis.core.RedisKeyValueAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
-import static com.ride.security.entity.Role.*;
+import static com.ride.security.member.Role.*;
 
 @SpringBootApplication
 @EnableJpaAuditing(auditorAwareRef = "auditorAware")

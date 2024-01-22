@@ -1,6 +1,6 @@
-package com.ride.security.service;
+package com.ride.security.config;
 
-import com.ride.security.repository.TokenRepository;
+import com.ride.security.token.AccessTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LogoutService implements LogoutHandler {
 
-    private final TokenRepository tokenRepository;
+    private final AccessTokenRepository accessTokenRepository;
 
     @Override
     public void logout(
@@ -26,12 +26,12 @@ public class LogoutService implements LogoutHandler {
             return;
         }
         jwt = authHeader.substring(7); // "Bearer " 제거 후 JWT 추출
-        var storedToken = tokenRepository.findByToken(jwt)
+        var storedToken = accessTokenRepository.findByToken(jwt)
                 .orElse(null);
         if (storedToken != null) {
             storedToken.setExpired(true);
             storedToken.setRevoked(true);
-            tokenRepository.save(storedToken);
+            accessTokenRepository.save(storedToken);
         }
     }
 }

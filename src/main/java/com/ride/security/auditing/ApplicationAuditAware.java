@@ -1,6 +1,6 @@
 package com.ride.security.auditing;
 
-import com.ride.security.entity.Member;
+import com.ride.security.member.Member;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;

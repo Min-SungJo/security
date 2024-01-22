@@ -1,4 +1,4 @@
-package com.ride.security.entity;
+package com.ride.security.token;
 
 
 
@@ -12,17 +12,17 @@ import java.io.Serializable;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@RedisHash(value = "refreshToken", timeToLive = 60)
+@RedisHash(value = "refreshToken", timeToLive = 7 * 24 * 60 * 60 * 1000) // 7일
 public class RefreshToken implements Serializable {
 
     @Id
     private String token;
     @Indexed
-    private String email;
+    private Integer memberId;
 
     @Builder
-    public RefreshToken(String token, String email) {
+    public RefreshToken(String token, Integer memberId) {
         this.token = token;
-        this.email = email;
+        this.memberId = memberId;
     }
 }

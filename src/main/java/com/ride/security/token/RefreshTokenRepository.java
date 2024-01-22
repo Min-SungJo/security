@@ -1,6 +1,5 @@
-package com.ride.security.repository;
+package com.ride.security.token;
 
-import com.ride.security.entity.RefreshToken;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;

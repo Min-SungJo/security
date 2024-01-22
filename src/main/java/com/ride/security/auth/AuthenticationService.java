@@ -1,16 +1,15 @@
-package com.ride.security.service;
+package com.ride.security.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ride.security.dto.AuthenticationRequest;
-import com.ride.security.dto.AuthenticationResponse;
-import com.ride.security.dto.RegisterRequest;
-import com.ride.security.entity.Member;
-import com.ride.security.entity.RefreshToken;
-import com.ride.security.entity.Token;
-import com.ride.security.entity.TokenType;
-import com.ride.security.repository.MemberRepository;
-import com.ride.security.repository.RefreshTokenRepository;
-import com.ride.security.repository.TokenRepository;
+import com.ride.security.member.Member;
+import com.ride.security.token.RefreshToken;
+import com.ride.security.token.Token;
+import com.ride.security.token.TokenType;
+import com.ride.security.member.MemberRepository;
+import com.ride.security.token.RefreshTokenRepository;
+import com.ride.security.token.AccessTokenRepository;
+import com.ride.security.config.JwtService;
+import com.ride.security.token.RedisRefreshTokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final TokenRepository accessTokenRepository;
+    private final AccessTokenRepository accessTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RedisRefreshTokenService redisRefreshTokenService;
     /**
@@ -52,10 +51,8 @@ public class AuthenticationService {
         var savedMember = memberRepository.save(member); // 회원 정보 저장
         var jwtToken = jwtService.generateToken(member); // access 토큰 생성
         var refreshToken = jwtService.generateRefreshToken(savedMember); // refresh 토큰 생성
-        saveMemberToken(savedMember, jwtToken);
+        saveMemberAccessToken(savedMember, jwtToken);
         saveMemberRefreshToken(savedMember, refreshToken);
-
-        //
         return AuthenticationResponse.builder()
                 .accessToken(jwtToken)
                 .refreshToken(refreshToken)
@@ -77,17 +74,21 @@ public class AuthenticationService {
         );
         var member = memberRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("Member not found")); // 사용자 조회
-        var jwtToken = jwtService.generateToken(member); // JWT 토큰 생성
+        var accessToken = jwtService.generateToken(member); // JWT 토큰 생성
         var refreshToken = jwtService.generateRefreshToken(member);
         saveMemberRefreshToken(member, refreshToken);
         revokeAllMemberTokens(member);
-        saveMemberToken(member, jwtToken);
+        saveMemberAccessToken(member, accessToken);
         return AuthenticationResponse.builder()
-                .accessToken(jwtToken)
+                .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build(); // 생성된 토큰으로 AuthenticationResponse 반환
     }
 
+    /**
+     * DB에 저장된 AccessToken 의 권한을 취소시킴
+     * @param member
+     */
     private void revokeAllMemberTokens(Member member) {
         var validMemberToken = accessTokenRepository.findAllValidTokensByMember(member.getId());
         if (validMemberToken.isEmpty()) return;
@@ -102,12 +103,12 @@ public class AuthenticationService {
      * DB에 토큰(JWT) 저장
      *
      * @param member   - DB 에 있는 사용자 자료형(TABLE)
-     * @param jwtToken - 생성된(저장할) 토큰
+     * @param accessToken - 생성된(저장할) 토큰
      */
-    private void saveMemberToken(Member member, String jwtToken) {
+    private void saveMemberAccessToken(Member member, String accessToken) {
         var token = Token.builder()
                 .member(member)
-                .token(jwtToken)
+                .token(accessToken)
                 .tokenType(TokenType.BEARER)
                 .expired(false)
                 .revoked(false)
@@ -117,7 +118,7 @@ public class AuthenticationService {
 
     private void saveMemberRefreshToken(Member member, String refreshToken) {
         var token = RefreshToken.builder()
-                .email(member.getEmail())
+                .memberId(member.getId())
                 .token(refreshToken)
                 .build();
         refreshTokenRepository.save(token);
@@ -135,7 +136,7 @@ public class AuthenticationService {
             var member = memberRepository.findByEmail(memberEmail)
                     .orElseThrow(() -> new UsernameNotFoundException("Member not found"));
 
-            if (!redisRefreshTokenService.isRefreshTokenPresent(refreshToken, member)) {
+            if (!redisRefreshTokenService.isRefreshTokenPresent(refreshToken)) {
                 sendErrorResponse(response, SC_UNAUTHORIZED, "Invalid or expired refresh token!");
                 return;
             }
@@ -143,7 +144,7 @@ public class AuthenticationService {
             if (jwtService.isTokenValid(refreshToken, member)) { // JWT 유효성 검증 성공시 토큰 재발급
                 var accessToken = jwtService.generateToken(member);
                 revokeAllMemberTokens(member);
-                saveMemberToken(member, accessToken);
+                saveMemberAccessToken(member, accessToken);
                 var authResponse = AuthenticationResponse.builder()
                         .accessToken(accessToken)
                         .refreshToken(refreshToken)

@@ -1,4 +1,4 @@
-package com.ride.security.entity;
+package com.ride.security.token;
 
 public enum TokenType {
     BEARER

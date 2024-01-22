@@ -1,7 +1,6 @@
 package com.ride.security.config;
 
-import com.ride.security.repository.TokenRepository;
-import com.ride.security.service.JwtService;
+import com.ride.security.token.AccessTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // 요청당
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final TokenRepository tokenRepository;
+    private final AccessTokenRepository accessTokenRepository;
 
     @Override
     protected void doFilterInternal(
@@ -43,9 +42,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // 요청당
         userEmail = jwtService.extractUsername(jwt); // JWT에서 사용자 이메일 추출
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) { // 사용자 이메일과 현재 인증이 없는 경우
             UserDetails member = this.userDetailsService.loadUserByUsername(userEmail); // 사용자 상세 정보 가져오기
-            var isTokenValid = tokenRepository.findByToken(jwt)
+
+            //db에 저장된 토큰 검증 정보
+            var isTokenValid = accessTokenRepository.findByToken(jwt)
                     .map(t -> !t.isExpired() && !t.isRevoked())
                     .orElse(false);
+
             if (isTokenValid && jwtService.isTokenValid(jwt, member)) { // JWT 유효성 검증
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         member, // 사용자 상세

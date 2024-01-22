@@ -1,7 +1,7 @@
 package com.ride.security.config;
 
 import com.ride.security.auditing.ApplicationAuditAware;
-import com.ride.security.repository.MemberRepository;
+import com.ride.security.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

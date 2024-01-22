@@ -1,5 +1,6 @@
-package com.ride.security.entity;
+package com.ride.security.token;
 
+import com.ride.security.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,9 +16,9 @@ public class Token {
     @Enumerated(EnumType.STRING)
     private TokenType tokenType;
     @Setter
-    private boolean expired;
+    private boolean expired; // db 만료 관리 (로그아웃)
     @Setter
-    private boolean revoked;
+    private boolean revoked; // db 취소 관리 (로그아웃)
 
     @ManyToOne
     @JoinColumn(name = "member_id")

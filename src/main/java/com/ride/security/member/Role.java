@@ -1,4 +1,4 @@
-package com.ride.security.entity;
+package com.ride.security.member;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.ride.security.entity.Permission.*;
+import static com.ride.security.member.Permission.*;
 
 @Getter
 @RequiredArgsConstructor

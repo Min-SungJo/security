@@ -1,7 +1,5 @@
-package com.ride.security.controller;
+package com.ride.security.member;
 
-import com.ride.security.dto.ChangePasswordRequest;
-import com.ride.security.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;

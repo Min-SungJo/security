@@ -1,4 +1,4 @@
-package com.ride.security.entity;
+package com.ride.security.member;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
