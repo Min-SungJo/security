@@ -2,6 +2,7 @@ package com.ride.security.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ride.security.member.Member;
+import com.ride.security.member.Role;
 import com.ride.security.token.RefreshToken;
 import com.ride.security.token.Token;
 import com.ride.security.token.TokenType;
@@ -46,7 +47,7 @@ public class AuthenticationService {
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword())) // 비밀번호 암호화
-                .role(request.getRole())
+                .role(Role.USER)
                 .build();
         var savedMember = memberRepository.save(member); // 회원 정보 저장
         var jwtToken = jwtService.generateToken(member); // access 토큰 생성
@@ -131,9 +132,9 @@ public class AuthenticationService {
             return;
         }
         final String refreshToken = authHeader.substring(7);
-        final String memberEmail = jwtService.extractUsername(refreshToken);
-        if (memberEmail != null) {
-            var member = memberRepository.findByEmail(memberEmail)
+        final String memberId = jwtService.extractUsername(refreshToken);
+        if (memberId != null) {
+            var member = memberRepository.findByEmail(memberId)
                     .orElseThrow(() -> new UsernameNotFoundException("Member not found"));
 
             if (!redisRefreshTokenService.isRefreshTokenPresent(refreshToken)) {
@@ -141,7 +142,7 @@ public class AuthenticationService {
                 return;
             }
 
-            if (jwtService.isTokenValid(refreshToken, member)) { // JWT 유효성 검증 성공시 토큰 재발급
+            if (jwtService.isTokenValid(refreshToken, member)) { // refreshToken 유효성 검증 성공시 토큰 재발급
                 var accessToken = jwtService.generateToken(member);
                 revokeAllMemberTokens(member);
                 saveMemberAccessToken(member, accessToken);
@@ -151,7 +152,10 @@ public class AuthenticationService {
                         .build();
                 response.setStatus(SC_OK);
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-            } else {
+            } else { // refreshToken 유효성 검증 실패시 재발급
+                // 자동으로 재발급
+                var newRefreshToken = jwtService.generateRefreshToken(member); // refresh 토큰 생성
+                saveMemberRefreshToken(member, newRefreshToken);
                 sendErrorResponse(response, SC_UNAUTHORIZED, "Invalid token!");
             }
         }

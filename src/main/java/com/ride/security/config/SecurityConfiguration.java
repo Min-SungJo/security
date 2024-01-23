@@ -53,7 +53,8 @@ public class SecurityConfiguration {
                         .requestMatchers(
                                 WHITE_LIST_URL
                         )
-                        .permitAll() // "/api/v1/auth/**" 경로는 인증 없이 허용
+                        .permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()// "/api/v1/auth/**" 경로는 인증 없이 허용
                         .requestMatchers("/api/v1/management/**").hasAnyRole(ADMIN.name(), MANAGER.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/management/**").hasAnyAuthority(ADMIN_READ.name(), MANAGER_READ.name())
                         .requestMatchers(HttpMethod.POST, "/api/v1/management/**").hasAnyAuthority(ADMIN_CREATE.name(), MANAGER_CREATE.name())
